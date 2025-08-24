@@ -16,6 +16,10 @@ import math
 import heapq
 from enum import Enum
 from collections import deque
+import json
+import os
+from datetime import datetime
+import uuid
 
 # --- Configuration ---
 SIMULATION_DURATION_HOURS = 1  # Simulate for 1 hour
@@ -98,6 +102,12 @@ class TollPlaza:
         '''Finds the toll booth with the shortest queue.'''
         return min(self.booths, key=lambda booth: booth.get_queue_length())
 
+    def record_transaction_event(self, event_data):
+        '''Writes a transaction event to the simulation_events.jsonl file.'''
+        file_path = os.path.join(os.getcwd(), 'simulation_events.jsonl')
+        with open(file_path, 'a') as f:
+            f.write(json.dumps(event_data) + '\n')
+
     def run_simulation(self, duration_seconds):
         '''Runs the main discrete-event simulation loop.'''
         print(f"Starting simulation for {duration_seconds / 3600:.1f} hours.")
@@ -116,7 +126,7 @@ class TollPlaza:
                 # Route vehicle to the booth with the shortest queue
                 booth = self._get_shortest_queue_booth()
                 booth.add_vehicle(vehicle)
-                print(f"    >> Routed to Booth {booth.id} (Queue: {booth.get_queue_length()})")
+                print(f"    >>Routed to Booth {booth.id} (Queue: {booth.get_queue_length()})")
 
                 # If the booth was idle, schedule its processing immediately
                 if not booth.is_busy:
@@ -148,6 +158,26 @@ class TollPlaza:
                 self.vehicles_processed += 1
                 print(f"TIME: {self.simulation_time:.2f}s - Vehicle {processed_vehicle.id} FINISHED at Booth {booth.id}. Wait time: {wait_time:.2f}s")
 
+                # --- Log transaction event ---
+                transaction_data = {
+                    "event_type": "transaction_event",
+                    "timestamp": datetime.fromtimestamp(self.simulation_time).isoformat() + "Z",
+                    "transaction_id": str(uuid.uuid4()), # Generate a unique ID
+                    "toll_fee": processed_vehicle.axles * 10, # Placeholder: simple fee based on axles
+                    "distance": 50.0, # Placeholder: assume a fixed distance for now
+                    "travel_time": round(wait_time),
+                    "queue_length": booth.get_queue_length(), # Queue length AFTER this vehicle leaves
+                    "vehicle_id": str(processed_vehicle.id),
+                    "license_plate": f"ABC{random.randint(1000, 9999)}", # Placeholder: dummy license plate
+                    "vehicle_type": processed_vehicle.vehicle_type.name,
+                    "axle_count": processed_vehicle.axles,
+                    "toll_plaza_id": f"TP_{booth.id}", # Placeholder: using booth ID as plaza ID
+                    "toll_plaza_name": "Simulated Toll Plaza", # Placeholder name
+                    "payment_method": "FASTag" # Placeholder
+                }
+                self.record_transaction_event(transaction_data)
+                # --- End log transaction event ---
+
                 booth.is_busy = False
                 booth.current_vehicle = None
 
@@ -174,3 +204,4 @@ if __name__ == "__main__":
     simulation_duration_seconds = SIMULATION_DURATION_HOURS * 3600
     toll_plaza = TollPlaza(num_booths=NUM_TOLL_BOOTHS, vehicles_per_hour=VEHICLES_PER_HOUR_AVG)
     toll_plaza.run_simulation(simulation_duration_seconds)
+
