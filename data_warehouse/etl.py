@@ -57,29 +57,29 @@ def run_etl():
                     transaction_data['date_key'] = date_key
 
                     # Insert into dim_date if not exists (simplified for example)
-                    con.execute(f"INSERT OR IGNORE INTO dim_date (date_key, full_date, day, month, year, quarter, day_of_week) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                                date_key, event_timestamp.date(), event_timestamp.day, event_timestamp.month, event_timestamp.year, (event_timestamp.month - 1) // 3 + 1, event_timestamp.isoweekday())
+                    con.execute("INSERT OR IGNORE INTO dim_date (date_key, full_date, day, month, year, quarter, day_of_week) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                                (date_key, event_timestamp.date(), event_timestamp.day, event_timestamp.month, event_timestamp.year, (event_timestamp.month - 1) // 3 + 1, event_timestamp.isoweekday()))
 
                     # Example: Populating dim_vehicle (simplified)
                     vehicle_id = event.get('vehicle_id')
                     vehicle_key = hash(vehicle_id) # Simple hash for key, use proper surrogate key generation
                     transaction_data['vehicle_key'] = vehicle_key
-                    con.execute(f"INSERT OR IGNORE INTO dim_vehicle (vehicle_key, vehicle_id, license_plate, vehicle_type, axle_count) VALUES (?, ?, ?, ?, ?)",
-                                vehicle_key, vehicle_id, event.get('license_plate'), event.get('vehicle_type'), event.get('axle_count'))
+                    con.execute("INSERT OR IGNORE INTO dim_vehicle (vehicle_key, vehicle_id, license_plate, vehicle_type, axle_count) VALUES (?, ?, ?, ?, ?)",
+                                (vehicle_key, vehicle_id, event.get('license_plate'), event.get('vehicle_type'), event.get('axle_count')))
 
                     # Example: Populating dim_toll_plaza (simplified)
                     toll_plaza_id = event.get('toll_plaza_id')
                     toll_plaza_key = hash(toll_plaza_id) # Simple hash for key
                     transaction_data['toll_plaza_key'] = toll_plaza_key
-                    con.execute(f"INSERT OR IGNORE INTO dim_toll_plaza (toll_plaza_key, toll_plaza_id, name) VALUES (?, ?, ?)",
-                                toll_plaza_key, toll_plaza_id, event.get('toll_plaza_name'))
+                    con.execute("INSERT OR IGNORE INTO dim_toll_plaza (toll_plaza_key, toll_plaza_id, name) VALUES (?, ?, ?)",
+                                (toll_plaza_key, toll_plaza_id, event.get('toll_plaza_name')))
 
                     # Example: Populating dim_payment_method (simplified)
                     payment_method_name = event.get('payment_method')
                     payment_method_key = hash(payment_method_name) # Simple hash for key
                     transaction_data['payment_method_key'] = payment_method_key
-                    con.execute(f"INSERT OR IGNORE INTO dim_payment_method (payment_method_key, method_name) VALUES (?, ?)",
-                                payment_method_key, payment_method_name)
+                    con.execute("INSERT OR IGNORE INTO dim_payment_method (payment_method_key, method_name) VALUES (?, ?)",
+                                (payment_method_key, payment_method_name))
 
                     processed_transactions.append(transaction_data)
 
@@ -94,15 +94,11 @@ def run_etl():
         # For large datasets, consider using DuckDB's COPY FROM or Pandas DataFrame insertion
         for trans in processed_transactions:
             try:
-                con.execute(
-                    "INSERT INTO fact_transactions (
-                        transaction_key, toll_plaza_key, vehicle_key, date_key, payment_method_key,
-                        toll_fee, travel_distance_km, travel_time_seconds, queue_length_at_transaction
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    trans['transaction_key'], trans['toll_plaza_key'], trans['vehicle_key'],
+                con.execute("INSERT INTO fact_transactions (transaction_key, toll_plaza_key, vehicle_key, date_key, payment_method_key, toll_fee, travel_distance_km, travel_time_seconds, queue_length_at_transaction) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (trans['transaction_key'], trans['toll_plaza_key'], trans['vehicle_key'],
                     trans['date_key'], trans['payment_method_key'], trans['toll_fee'],
                     trans['travel_distance_km'], trans['travel_time_seconds'],
-                    trans['queue_length_at_transaction']
+                    trans['queue_length_at_transaction'])
                 )
             except duckdb.ConstraintException as e:
                 print(f"Skipping duplicate transaction or constraint violation: {e}")

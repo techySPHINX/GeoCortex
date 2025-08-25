@@ -1,4 +1,4 @@
-
+'''
 Core Simulation Engine for the AI-Powered Tolling System.
 
 This module contains the classes and logic for running a discrete-event simulation
@@ -126,7 +126,7 @@ class TollPlaza:
                 # Route vehicle to the booth with the shortest queue
                 booth = self._get_shortest_queue_booth()
                 booth.add_vehicle(vehicle)
-                print(f"    >>Routed to Booth {booth.id} (Queue: {booth.get_queue_length()})")
+                print(f"    >> Routed to Booth {booth.id} (Queue: {booth.get_queue_length()})")
 
                 # If the booth was idle, schedule its processing immediately
                 if not booth.is_busy:
@@ -189,7 +189,6 @@ class TollPlaza:
         self.print_statistics()
 
     def print_statistics(self):
-        '''Prints a summary of the simulation results.'''
         print("\n--- Simulation Statistics ---")
         print(f"Total vehicles processed: {self.vehicles_processed}")
         if self.vehicles_processed > 0:
@@ -204,4 +203,3 @@ if __name__ == "__main__":
     simulation_duration_seconds = SIMULATION_DURATION_HOURS * 3600
     toll_plaza = TollPlaza(num_booths=NUM_TOLL_BOOTHS, vehicles_per_hour=VEHICLES_PER_HOUR_AVG)
     toll_plaza.run_simulation(simulation_duration_seconds)
-

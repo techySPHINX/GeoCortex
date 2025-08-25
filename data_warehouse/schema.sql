@@ -1,7 +1,7 @@
 -- Dimension Tables
 
 CREATE TABLE IF NOT EXISTS dim_toll_plaza (
-    toll_plaza_key INTEGER PRIMARY KEY,
+    toll_plaza_key BIGINT PRIMARY KEY,
     toll_plaza_id VARCHAR(255) NOT NULL,
     name VARCHAR(255),
     location VARCHAR(255),
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS dim_toll_plaza (
 );
 
 CREATE TABLE IF NOT EXISTS dim_vehicle (
-    vehicle_key INTEGER PRIMARY KEY,
+    vehicle_key BIGINT PRIMARY KEY,
     vehicle_id VARCHAR(255) NOT NULL,
     license_plate VARCHAR(255),
     vehicle_type VARCHAR(50),
@@ -29,18 +29,18 @@ CREATE TABLE IF NOT EXISTS dim_date (
 );
 
 CREATE TABLE IF NOT EXISTS dim_payment_method (
-    payment_method_key INTEGER PRIMARY KEY,
+    payment_method_key BIGINT PRIMARY KEY,
     method_name VARCHAR(255) NOT NULL
 );
 
 -- Fact Table
 
 CREATE TABLE IF NOT EXISTS fact_transactions (
-    transaction_key INTEGER PRIMARY KEY,
-    toll_plaza_key INTEGER,
-    vehicle_key INTEGER,
+    transaction_key VARCHAR(255) PRIMARY KEY,
+    toll_plaza_key BIGINT,
+    vehicle_key BIGINT,
     date_key INTEGER,
-    payment_method_key INTEGER,
+    payment_method_key BIGINT,
     toll_fee DECIMAL(10, 2),
     travel_distance_km DECIMAL(10, 2),
     travel_time_seconds INTEGER,
